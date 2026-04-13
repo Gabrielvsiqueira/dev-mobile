@@ -115,6 +115,16 @@ class MedicationRepository {
     _medications.removeWhere((m) => m.id == id);
   }
 
+  Future<void> updateMedication(Medication updatedMedication) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    final index = _medications.indexWhere((m) => m.id == updatedMedication.id);
+
+    if (index != -1) {
+      _medications[index] = updatedMedication;
+    }
+  }
+
   Future<void> updateStatus(String scheduleId, MedicationStatus status) async {
     await Future.delayed(const Duration(milliseconds: 200));
     for (final med in _medications) {
