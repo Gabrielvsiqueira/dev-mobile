@@ -1,0 +1,74 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="112" fill="#7C5CBF"/>
+  <circle cx="256" cy="256" r="220" fill="#6B4BAF"/>
+  <circle cx="256" cy="256" r="200" fill="#7C5CBF"/>
+
+  <!-- Cabelo / coque -->
+  <ellipse cx="256" cy="148" rx="78" ry="64" fill="#E8E0F0"/>
+  <ellipse cx="256" cy="126" rx="52" ry="38" fill="#F0EAF8"/>
+  <circle cx="256" cy="106" r="34" fill="#DDD5EC"/>
+  <circle cx="256" cy="106" r="24" fill="#E8E0F0"/>
+  <path d="M192 158 Q208 142 222 162" fill="none" stroke="#C8BBD8" stroke-width="4" stroke-linecap="round"/>
+  <path d="M290 158 Q308 142 322 162" fill="none" stroke="#C8BBD8" stroke-width="4" stroke-linecap="round"/>
+  <!-- grampo -->
+  <ellipse cx="294" cy="112" rx="14" ry="7" fill="#D4A0D4" transform="rotate(-30 294 112)"/>
+  <circle cx="302" cy="107" r="5" fill="#C080C0"/>
+
+  <!-- Rosto -->
+  <ellipse cx="256" cy="228" rx="72" ry="80" fill="#F5D5B8"/>
+  <!-- bochechas -->
+  <ellipse cx="216" cy="248" rx="20" ry="13" fill="#F0A0A0" opacity="0.5"/>
+  <ellipse cx="296" cy="248" rx="20" ry="13" fill="#F0A0A0" opacity="0.5"/>
+
+  <!-- Óculos redondos -->
+  <circle cx="232" cy="220" r="22" fill="none" stroke="#8B6FBF" stroke-width="5"/>
+  <circle cx="280" cy="220" r="22" fill="none" stroke="#8B6FBF" stroke-width="5"/>
+  <line x1="254" y1="220" x2="258" y2="220" stroke="#8B6FBF" stroke-width="4"/>
+  <line x1="210" y1="220" x2="200" y2="214" stroke="#8B6FBF" stroke-width="4" stroke-linecap="round"/>
+  <line x1="302" y1="220" x2="314" y2="214" stroke="#8B6FBF" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Olhos fechados felizes -->
+  <path d="M220 218 Q232 208 244 218" fill="none" stroke="#5A3040" stroke-width="5" stroke-linecap="round"/>
+  <path d="M268 218 Q280 208 292 218" fill="none" stroke="#5A3040" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- Sorriso -->
+  <path d="M220 258 Q256 282 292 258" fill="none" stroke="#C0607A" stroke-width="5.5" stroke-linecap="round"/>
+
+  <!-- Pescoço -->
+  <rect x="238" y="304" width="36" height="32" rx="10" fill="#F0C8A0"/>
+
+  <!-- Corpo / blusa -->
+  <path d="M158 390 Q176 346 236 336 L256 346 L276 336 Q336 346 354 390 L366 460 L146 460 Z" fill="#9B72CF"/>
+  <path d="M236 336 Q256 360 276 336" fill="none" stroke="#7C5CBF" stroke-width="4"/>
+
+  <!-- Braço esquerdo -->
+  <path d="M162 388 Q134 398 140 374" fill="none" stroke="#F0C8A0" stroke-width="22" stroke-linecap="round"/>
+  <!-- Comprimido esquerdo -->
+  <g transform="translate(118, 362) rotate(-20)">
+    <rect x="0" y="0" width="52" height="28" rx="14" fill="#FFFFFF"/>
+    <rect x="0" y="0" width="26" height="28" rx="14" fill="#FF8FAB"/>
+    <line x1="26" y1="0" x2="26" y2="28" stroke="#E8E8E8" stroke-width="2"/>
+  </g>
+
+  <!-- Braço direito -->
+  <path d="M350 388 Q378 398 372 374" fill="none" stroke="#F0C8A0" stroke-width="22" stroke-linecap="round"/>
+  <!-- Comprimido direito -->
+  <g transform="translate(356, 362) rotate(15)">
+    <rect x="0" y="0" width="52" height="28" rx="14" fill="#FFFFFF"/>
+    <rect x="26" y="0" width="26" height="28" rx="14" fill="#A0C8FF"/>
+    <line x1="26" y1="0" x2="26" y2="28" stroke="#E8E8E8" stroke-width="2"/>
+  </g>
+
+  <!-- Coração grande direita -->
+  <path d="M390 158 C390 146 398 136 408 146 C418 136 426 146 426 158 C426 176 408 192 408 192 C408 192 390 176 390 158Z" fill="#FF8FAB"/>
+  <!-- Coração menor esquerda -->
+  <path d="M72 188 C72 178 78 170 86 178 C94 170 100 178 100 188 C100 202 86 214 86 214 C86 214 72 202 72 188Z" fill="#FFB0C8" opacity="0.8"/>
+
+  <!-- Estrelinhas -->
+  <circle cx="116" cy="128" r="7" fill="#FFD700" opacity="0.9"/>
+  <circle cx="400" cy="240" r="5" fill="#FFD700" opacity="0.7"/>
+  <circle cx="88" cy="290" r="5" fill="#E8DFFF" opacity="0.8"/>
+  <circle cx="418" cy="330" r="7" fill="#E8DFFF" opacity="0.7"/>
+  <circle cx="136" cy="408" r="5" fill="#FFB0C8" opacity="0.6"/>
+  <circle cx="380" cy="128" r="4" fill="#FFD700" opacity="0.6"/>
+</svg>

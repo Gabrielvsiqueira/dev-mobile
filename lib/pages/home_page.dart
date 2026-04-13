@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../model/medication.dart';
 import '../repository/medication_repository.dart';
+import '../routes/app_router.dart';
+import 'medication_wizard_page.dart';
 
 class HomePage extends StatefulWidget {
   final String userName;
@@ -59,6 +62,9 @@ class _HomePageState extends State<HomePage> {
                   _buildDateStrip(),
                   const SizedBox(height: 20),
                   _buildMedicationsList(),
+                  const SizedBox(height: 16),
+                  _buildActionButtons(),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),
@@ -237,6 +243,70 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Future<Medication?> _showPickMedicationSheet() async {
+    return showModalBottomSheet<Medication>(
+      context: context,
+      backgroundColor: _softBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: const Color(0xFFD4C5F5),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Qual remédio editar?',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: _darkPurple,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ..._medications.map(
+            (med) => ListTile(
+              leading: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: _lightPurple,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.medication_rounded,
+                  color: _primaryPurple,
+                  size: 22,
+                ),
+              ),
+              title: Text(
+                med.name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  color: _darkPurple,
+                ),
+              ),
+              subtitle: Text(
+                med.dosage,
+                style: const TextStyle(color: Color(0xFF8A7AAA), fontSize: 12),
+              ),
+              onTap: () => ctx.pop(med),
+            ),
+          ),
+          SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMedicationsList() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -255,10 +325,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 12),
           if (_isLoading)
             const Center(
-              child: Text(
-                'Carregando...',
-                style: TextStyle(color: Colors.black),
-              ),
+              child: CircularProgressIndicator(color: _primaryPurple),
             )
           else if (_medications.isEmpty)
             _buildEmptyState()
@@ -386,6 +453,41 @@ class _HomePageState extends State<HomePage> {
           fontSize: 15,
           fontWeight: FontWeight.w600,
         ),
+      ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        children: [
+          _buildButton(
+            label: 'Adicionar medicamento',
+            icon: Icons.add_circle_outline_rounded,
+            isPrimary: true,
+            onTap: () async {
+              final changed = await context.push<bool>(AppRoutes.wizardAdd);
+              if (changed == true) _loadMedications();
+            },
+          ),
+          const SizedBox(height: 10),
+          _buildButton(
+            label: 'Editar medicamentos',
+            icon: Icons.edit_outlined,
+            isPrimary: false,
+            onTap: () async {
+              if (_medications.isEmpty) return;
+              final selected = await _showPickMedicationSheet();
+              if (selected == null) return;
+              final changed = await context.push<bool>(
+                AppRoutes.wizardEdit,
+                extra: selected,
+              );
+              if (changed == true) _loadMedications();
+            },
+          ),
+        ],
       ),
     );
   }

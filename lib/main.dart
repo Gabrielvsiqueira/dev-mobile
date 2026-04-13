@@ -1,5 +1,6 @@
-import 'package:alo_nene/pages/home_page.dart';
+import 'package:alo_nene/pages/login_page.dart';
 import 'package:flutter/material.dart';
+import 'routes/app_router.dart';
 
 void main() {
   runApp(const MedicalApp());
@@ -10,14 +11,15 @@ class MedicalApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Alô, Nenê!',
       debugShowCheckedModeBanner: false,
+      routerConfig: appRouter,
       theme: ThemeData(
+        fontFamily: 'Nunito',
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF7C5CBF)),
         useMaterial3: true,
       ),
-      home: HomePage(),
     );
   }
 }
