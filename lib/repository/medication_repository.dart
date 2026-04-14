@@ -1,7 +1,7 @@
 import '../model/medication.dart';
 
 class MedicationRepository {
-  final List<Medication> _medications = [
+  static final List<Medication> _medications = [
     Medication(
       id: '1',
       name: 'Losartana',
@@ -123,6 +123,94 @@ class MedicationRepository {
     if (index != -1) {
       _medications[index] = updatedMedication;
     }
+  }
+
+  Future<void> resetToSeedData() async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    _medications
+      ..clear()
+      ..addAll([
+        Medication(
+          id: '1',
+          name: 'Losartana',
+          dosage: '50mg · 1 comprimido',
+          schedules: [
+            MedicationSchedule(
+              id: 's1',
+              medicationId: '1',
+              scheduledTime: '08:00',
+              recurrenceType: RecurrenceType.daily,
+              status: MedicationStatus.taken,
+            ),
+          ],
+        ),
+        Medication(
+          id: '2',
+          name: 'Metformina',
+          dosage: '500mg · 1 comprimido',
+          schedules: [
+            MedicationSchedule(
+              id: 's2',
+              medicationId: '2',
+              scheduledTime: '12:00',
+              recurrenceType: RecurrenceType.daily,
+              status: MedicationStatus.pending,
+            ),
+          ],
+        ),
+        Medication(
+          id: '3',
+          name: 'Atenolol',
+          dosage: '25mg · 1 comprimido',
+          schedules: [
+            MedicationSchedule(
+              id: 's3',
+              medicationId: '3',
+              scheduledTime: '20:00',
+              recurrenceType: RecurrenceType.daily,
+              status: MedicationStatus.upcoming,
+            ),
+          ],
+        ),
+        Medication(
+          id: '4',
+          name: 'Vitamina D',
+          dosage: '1000UI · 1 cápsula',
+          schedules: [
+            MedicationSchedule(
+              id: 's4',
+              medicationId: '4',
+              scheduledTime: '08:00',
+              recurrenceType: RecurrenceType.weekly,
+              weekDays: ['mon', 'wed', 'fri'],
+              status: MedicationStatus.taken,
+            ),
+          ],
+        ),
+        Medication(
+          id: '5',
+          name: 'Omeprazol',
+          dosage: '20mg · 1 cápsula',
+          schedules: [
+            MedicationSchedule(
+              id: 's5',
+              medicationId: '5',
+              scheduledTime: '07:00',
+              recurrenceType: RecurrenceType.interval,
+              intervalHours: 12,
+              status: MedicationStatus.taken,
+            ),
+            MedicationSchedule(
+              id: 's5b',
+              medicationId: '5',
+              scheduledTime: '19:00',
+              recurrenceType: RecurrenceType.interval,
+              intervalHours: 12,
+              status: MedicationStatus.upcoming,
+            ),
+          ],
+        ),
+      ]);
   }
 
   Future<void> updateStatus(String scheduleId, MedicationStatus status) async {
