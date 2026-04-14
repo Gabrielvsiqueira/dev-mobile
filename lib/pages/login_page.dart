@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import '../routes/app_router.dart';
+import '../routes/app_router.dart' show AppRoutes, AppSession;
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,6 +16,7 @@ class _LoginPageState extends State<LoginPage> {
   final _nameFocus = FocusNode();
   final _phoneFocus = FocusNode();
   bool _isLoading = false;
+  bool _nameError = false;
 
   static const _primaryPurple = Color(0xFF7C5CBF);
   static const _lightPurple = Color(0xFFEAE4F7);
@@ -34,15 +35,18 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _onEnter() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
+      setState(() => _nameError = true);
       _nameFocus.requestFocus();
       return;
     }
+    setState(() => _nameError = false);
 
+    AppSession.userName = name;
     setState(() => _isLoading = true);
     await Future.delayed(const Duration(milliseconds: 800));
 
     if (!mounted) return;
-    context.go(AppRoutes.home, extra: name);
+    context.go(AppRoutes.home);
   }
 
   @override
@@ -149,6 +153,11 @@ class _LoginPageState extends State<LoginPage> {
             icon: Icons.person_rounded,
             nextFocus: _phoneFocus,
             inputType: TextInputType.name,
+            hasError: _nameError,
+            errorText: 'Por favor, informe seu nome para continuar',
+            onChanged: (_) {
+              if (_nameError) setState(() => _nameError = false);
+            },
           ),
           const SizedBox(height: 12),
           _buildInputField(
@@ -187,7 +196,10 @@ class _LoginPageState extends State<LoginPage> {
     FocusNode? nextFocus,
     TextInputType inputType = TextInputType.text,
     String? helperText,
+    String? errorText,
+    bool hasError = false,
     ValueChanged<String>? onSubmitted,
+    ValueChanged<String>? onChanged,
     List<TextInputFormatter>? formatters,
   }) {
     return Column(
@@ -195,10 +207,10 @@ class _LoginPageState extends State<LoginPage> {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF4A2E8C),
+            color: hasError ? const Color(0xFFC62828) : const Color(0xFF4A2E8C),
           ),
         ),
         const SizedBox(height: 6),
@@ -209,10 +221,14 @@ class _LoginPageState extends State<LoginPage> {
             return Container(
               height: 56,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: hasError ? const Color(0xFFFFF5F5) : Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: isFocused ? _primaryPurple : const Color(0xFFEAE4F7),
+                  color: hasError
+                      ? const Color(0xFFC62828)
+                      : isFocused
+                          ? _primaryPurple
+                          : const Color(0xFFEAE4F7),
                   width: 1.5,
                 ),
               ),
@@ -234,6 +250,7 @@ class _LoginPageState extends State<LoginPage> {
                       textInputAction: nextFocus != null
                           ? TextInputAction.next
                           : TextInputAction.done,
+                      onChanged: onChanged,
                       onSubmitted: (v) {
                         if (nextFocus != null) {
                           nextFocus.requestFocus();
@@ -265,7 +282,17 @@ class _LoginPageState extends State<LoginPage> {
             );
           },
         ),
-        if (helperText != null) ...[
+        if (hasError && errorText != null) ...[
+          const SizedBox(height: 5),
+          Text(
+            errorText,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Color(0xFFC62828),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ] else if (helperText != null) ...[
           const SizedBox(height: 5),
           Text(
             helperText,
