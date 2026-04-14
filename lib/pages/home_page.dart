@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import '../model/medication.dart';
 import '../repository/medication_repository.dart';
 import '../routes/app_router.dart';
-import 'medication_wizard_page.dart';
 
 class HomePage extends StatefulWidget {
   final String userName;
@@ -193,9 +192,7 @@ class _HomePageState extends State<HomePage> {
                     color: isSelected ? _primaryPurple : Colors.white,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: isSelected
-                          ? _primaryPurple
-                          : const Color(0xFFEAE4F7),
+                      color: isSelected ? _primaryPurple : const Color(0xFFEAE4F7),
                       width: 1.5,
                     ),
                   ),
@@ -207,9 +204,7 @@ class _HomePageState extends State<HomePage> {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: isSelected
-                              ? const Color(0xFFD4C5F5)
-                              : const Color(0xFF9B8EC4),
+                          color: isSelected ? const Color(0xFFD4C5F5) : const Color(0xFF9B8EC4),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -227,9 +222,7 @@ class _HomePageState extends State<HomePage> {
                         height: 5,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isSelected
-                              ? Colors.white
-                              : const Color(0xFFBFA8EE),
+                          color: isSelected ? Colors.white : const Color(0xFFBFA8EE),
                         ),
                       ),
                     ],
@@ -281,11 +274,8 @@ class _HomePageState extends State<HomePage> {
                   color: _lightPurple,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
-                  Icons.medication_rounded,
-                  color: _primaryPurple,
-                  size: 22,
-                ),
+                child: const Icon(Icons.medication_rounded,
+                    color: _primaryPurple, size: 22),
               ),
               title: Text(
                 med.name,
@@ -296,7 +286,10 @@ class _HomePageState extends State<HomePage> {
               ),
               subtitle: Text(
                 med.dosage,
-                style: const TextStyle(color: Color(0xFF8A7AAA), fontSize: 12),
+                style: const TextStyle(
+                  color: Color(0xFF8A7AAA),
+                  fontSize: 12,
+                ),
               ),
               onTap: () => ctx.pop(med),
             ),
@@ -331,17 +324,22 @@ class _HomePageState extends State<HomePage> {
             _buildEmptyState()
           else
             ...(_medications
-                    .expand((med) => med.schedules.map((s) => (med, s)))
-                    .toList()
-                  ..sort(
-                    (a, b) => a.$2.scheduledTime.compareTo(b.$2.scheduledTime),
-                  ))
-                .map(
-                  (entry) => Padding(
+                .expand((med) => med.schedules.map((s) => (med, s)))
+                .toList()
+              ..sort((a, b) => a.$2.scheduledTime.compareTo(b.$2.scheduledTime)))
+                .map((entry) => Padding(
                     padding: const EdgeInsets.only(bottom: 10),
-                    child: _buildMedicationCard(entry.$1, entry.$2),
-                  ),
-                ),
+                    child: GestureDetector(
+                      onTap: () => context.push(
+                        AppRoutes.alarm,
+                        extra: AlarmArgs(
+                          medication: entry.$1,
+                          schedule: entry.$2,
+                        ),
+                      ),
+                      child: _buildMedicationCard(entry.$1, entry.$2),
+                    ),
+                  )),
         ],
       ),
     );
@@ -353,7 +351,10 @@ class _HomePageState extends State<HomePage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: config.borderColor, width: 1.5),
+        border: Border.all(
+          color: config.borderColor,
+          width: 1.5,
+        ),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
@@ -365,11 +366,7 @@ class _HomePageState extends State<HomePage> {
               color: config.iconBg,
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(
-              Icons.medication_rounded,
-              color: config.iconColor,
-              size: 24,
-            ),
+            child: Icon(Icons.medication_rounded, color: config.iconColor, size: 24),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -402,10 +399,7 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: config.timeBg,
                   borderRadius: BorderRadius.circular(20),
@@ -510,9 +504,7 @@ class _HomePageState extends State<HomePage> {
           elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 16),
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         ),
       ),
     );
@@ -537,13 +529,18 @@ class _HomePageState extends State<HomePage> {
             icon: Icons.home_rounded,
             label: 'Início',
             isActive: true,
+            onTap: () {},
           ),
           _buildNavItem(
             icon: Icons.calendar_month_rounded,
             label: 'Calendário',
+            onTap: () => context.go(AppRoutes.calendar),
           ),
-          _buildNavItem(icon: Icons.history_rounded, label: 'Histórico'),
-          _buildNavItem(icon: Icons.person_rounded, label: 'Perfil'),
+          _buildNavItem(
+            icon: Icons.person_rounded,
+            label: 'Perfil',
+            onTap: () => context.go(AppRoutes.profile, extra: _userName),
+          ),
         ],
       ),
     );
@@ -552,18 +549,16 @@ class _HomePageState extends State<HomePage> {
   Widget _buildNavItem({
     required IconData icon,
     required String label,
+    required VoidCallback onTap,
     bool isActive = false,
   }) {
     return GestureDetector(
-      onTap: () {},
+      onTap: onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            size: 24,
-            color: isActive ? _primaryPurple : const Color(0xFFBFA8EE),
-          ),
+          Icon(icon, size: 24,
+              color: isActive ? _primaryPurple : const Color(0xFFBFA8EE)),
           const SizedBox(height: 3),
           Text(
             label,

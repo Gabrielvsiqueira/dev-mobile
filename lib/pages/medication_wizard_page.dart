@@ -104,6 +104,51 @@ class _MedicationWizardPageState extends State<MedicationWizardPage> {
     }
   }
 
+  Future<void> _delete() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Excluir medicamento?',
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            color: _darkPurple,
+            fontSize: 18,
+          ),
+        ),
+        content: Text(
+          'Deseja excluir "${_nameController.text.trim()}"? Essa ação não pode ser desfeita.',
+          style: const TextStyle(color: Color(0xFF8A7AAA), fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text(
+              'Cancelar',
+              style: TextStyle(color: _primaryPurple, fontWeight: FontWeight.w700),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFC62828),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Excluir', style: TextStyle(fontWeight: FontWeight.w800)),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    final repo = MedicationRepository();
+    await repo.removeMedication(widget.medication!.id);
+    if (!mounted) return;
+    context.pop(true);
+  }
+
   Future<void> _save() async {
     final repo = MedicationRepository();
     final id =
@@ -352,6 +397,25 @@ class _MedicationWizardPageState extends State<MedicationWizardPage> {
                   ),
                 ),
                 child: const Text('Corrigir algo'),
+              ),
+            ),
+          ],
+          if (widget.isEditing) ...[
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton.icon(
+                onPressed: _delete,
+                icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                label: const Text('Excluir medicamento'),
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFFC62828),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  textStyle: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ),
           ],

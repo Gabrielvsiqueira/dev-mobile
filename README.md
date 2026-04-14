@@ -21,19 +21,20 @@ O **Alô, Nenê!** combina lembretes de medicação com:
 
 ### 1.1 Tecnologias
 
+| Camada | Tecnologia |
 |---|---|
-| Frontend | Flutter (Dart) | 
-| Arquitetura | Baeada em Repository Pattern | 
+| Frontend | Flutter (Dart) |
+| Arquitetura | Baseada em Repository Pattern |
 
 ---
 
 ### 2. Arquitetura
-O projeto segue uma arquitetura em camadas com separação clara de responsabilidades:
 
+| Pasta | Responsabilidade |
 |---|---|
-| pages | UI | 
-| model | dominio | 
-| repository | acesso aos dados | 
+| pages | UI e navegação |
+| model | Domínio e entidades |
+| repository | Acesso aos dados |
 
 ### 2.1 Principais decisões
 
