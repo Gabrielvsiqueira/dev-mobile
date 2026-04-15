@@ -2,18 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../routes/app_router.dart';
-
-class EmergencyContact {
-  final String name;
-  final String relationship;
-  final String phone;
-
-  const EmergencyContact({
-    required this.name,
-    required this.relationship,
-    required this.phone,
-  });
-}
+import '../viewmodels/emergency_view_model.dart';
+import '../widgets/contact_card.dart';
 
 class EmergencyPage extends StatefulWidget {
   const EmergencyPage({super.key});
@@ -23,35 +13,28 @@ class EmergencyPage extends StatefulWidget {
 }
 
 class _EmergencyPageState extends State<EmergencyPage> {
-  static const _dangerRed = Color(0xFFC62828);
-  static const _lightRed = Color(0xFFFFEBEE);
-  static const _primaryPurple = Color(0xFF7C5CBF);
-  static const _lightPurple = Color(0xFFEAE4F7);
-  static const _darkPurple = Color(0xFF2D1B5E);
-  static const _softBg = Color(0xFFF7F4F0);
+  late EmergencyViewModel _viewModel;
 
-  // Contatos mockados — futuramente virão do SharedPreferences / Supabase
-  final List<EmergencyContact> _contacts = [
-    const EmergencyContact(
-      name: 'Maria Aparecida',
-      relationship: 'Filha',
-      phone: '(44) 99111-2222',
-    ),
-    const EmergencyContact(
-      name: 'João Carlos',
-      relationship: 'Genro',
-      phone: '(44) 99333-4444',
-    ),
-  ];
-
-  bool _isAdding = false;
   final _nameController = TextEditingController();
   final _relController = TextEditingController();
   final _phoneController = TextEditingController();
   final _nameFocus = FocusNode();
 
+  static const _dangerRed = Color(0xFFC62828);
+  static const _primaryPurple = Color(0xFF7C5CBF);
+  static const _lightPurple = Color(0xFFEAE4F7);
+  static const _darkPurple = Color(0xFF2D1B5E);
+  static const _softBg = Color(0xFFF7F4F0);
+
+  @override
+  void initState() {
+    super.initState();
+    _viewModel = EmergencyViewModel();
+  }
+
   @override
   void dispose() {
+    _viewModel.dispose();
     _nameController.dispose();
     _relController.dispose();
     _phoneController.dispose();
@@ -61,7 +44,6 @@ class _EmergencyPageState extends State<EmergencyPage> {
 
   void _callPhone(String phone) {
     HapticFeedback.mediumImpact();
-    // Em produção: url_launcher → 'tel:$phone'
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Ligando para $phone...'),
@@ -88,19 +70,20 @@ class _EmergencyPageState extends State<EmergencyPage> {
     );
   }
 
-  void _toggleAddForm() {
-    setState(() => _isAdding = !_isAdding);
-    if (_isAdding) {
-      Future.delayed(
-        const Duration(milliseconds: 100),
-        () => _nameFocus.requestFocus(),
-      );
-    } else {
-      _nameController.clear();
-      _relController.clear();
-      _phoneController.clear();
-      FocusScope.of(context).unfocus();
-    }
+  void _openAddForm() {
+    _viewModel.openAddForm();
+    Future.delayed(
+      const Duration(milliseconds: 100),
+      () => _nameFocus.requestFocus(),
+    );
+  }
+
+  void _cancelAddForm() {
+    _viewModel.cancelAddForm();
+    _nameController.clear();
+    _relController.clear();
+    _phoneController.clear();
+    FocusScope.of(context).unfocus();
   }
 
   void _saveContact() {
@@ -109,16 +92,8 @@ class _EmergencyPageState extends State<EmergencyPage> {
     final phone = _phoneController.text.trim();
     if (name.isEmpty || phone.isEmpty) return;
 
-    setState(() {
-      _contacts.add(
-        EmergencyContact(
-          name: name,
-          relationship: rel.isEmpty ? 'Contato' : rel,
-          phone: phone,
-        ),
-      );
-      _isAdding = false;
-    });
+    _viewModel.addContact(name, rel, phone);
+
     _nameController.clear();
     _relController.clear();
     _phoneController.clear();
@@ -137,8 +112,8 @@ class _EmergencyPageState extends State<EmergencyPage> {
   }
 
   void _removeContact(int index) {
-    final name = _contacts[index].name;
-    setState(() => _contacts.removeAt(index));
+    final name = _viewModel.contacts[index].name;
+    _viewModel.removeContact(index);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('$name removido.'),
@@ -151,39 +126,34 @@ class _EmergencyPageState extends State<EmergencyPage> {
     );
   }
 
-  String _initials(String name) {
-    final parts = name.trim().split(' ');
-    if (parts.length >= 2) {
-      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    }
-    return name.substring(0, 2).toUpperCase();
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _softBg,
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-                child: Column(
-                  children: [
-                    _buildSamuButton(),
-                    const SizedBox(height: 24),
-                    _buildContactsList(),
-                    const SizedBox(height: 16),
-                    if (_isAdding) _buildAddForm(),
-                    if (!_isAdding) _buildAddButton(),
-                  ],
+    return ListenableBuilder(
+      listenable: _viewModel,
+      builder: (context, _) => Scaffold(
+        backgroundColor: _softBg,
+        body: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: Column(
+            children: [
+              _buildHeader(),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+                  child: Column(
+                    children: [
+                      _buildSamuButton(),
+                      const SizedBox(height: 24),
+                      _buildContactsList(),
+                      const SizedBox(height: 16),
+                      if (_viewModel.isAdding) _buildAddForm(),
+                      if (!_viewModel.isAdding) _buildAddButton(),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -327,6 +297,7 @@ class _EmergencyPageState extends State<EmergencyPage> {
   }
 
   Widget _buildContactsList() {
+    final contacts = _viewModel.contacts;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -340,7 +311,7 @@ class _EmergencyPageState extends State<EmergencyPage> {
           ),
         ),
         const SizedBox(height: 12),
-        if (_contacts.isEmpty)
+        if (contacts.isEmpty)
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(24),
@@ -369,107 +340,21 @@ class _EmergencyPageState extends State<EmergencyPage> {
             ),
           )
         else
-          ...List.generate(_contacts.length, (index) {
-            final contact = _contacts[index];
+          ...List.generate(contacts.length, (index) {
+            final contact = contacts[index];
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
-              child: _buildContactCard(contact, index),
+              child: ContactCard(
+                name: contact.name,
+                relationship: contact.relationship,
+                phone: contact.phone,
+                initials: _viewModel.initials(contact.name),
+                onCall: () => _callPhone(contact.phone),
+                onDismiss: () => _removeContact(index),
+              ),
             );
           }),
       ],
-    );
-  }
-
-  Widget _buildContactCard(EmergencyContact contact, int index) {
-    return Dismissible(
-      key: Key('contact_$index${contact.phone}'),
-      direction: DismissDirection.endToStart,
-      onDismissed: (_) => _removeContact(index),
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        decoration: BoxDecoration(
-          color: _lightRed,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Icon(
-          Icons.delete_outline_rounded,
-          color: _dangerRed,
-          size: 24,
-        ),
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _lightPurple, width: 1.5),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: _lightPurple,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  _initials(contact.name),
-                  style: const TextStyle(
-                    color: _primaryPurple,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    contact.name,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: _darkPurple,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${contact.relationship} · ${contact.phone}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF9B8EC4),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: () => _callPhone(contact.phone),
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5E9),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.phone_rounded,
-                  color: Color(0xFF2E7D32),
-                  size: 22,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -477,7 +362,7 @@ class _EmergencyPageState extends State<EmergencyPage> {
     return SizedBox(
       width: double.infinity,
       child: OutlinedButton.icon(
-        onPressed: _toggleAddForm,
+        onPressed: _openAddForm,
         icon: const Icon(Icons.person_add_rounded, size: 18),
         label: const Text('Adicionar contato'),
         style: OutlinedButton.styleFrom(
@@ -546,7 +431,7 @@ class _EmergencyPageState extends State<EmergencyPage> {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: _toggleAddForm,
+                  onPressed: _cancelAddForm,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: const Color(0xFF9B8EC4),
                     side: const BorderSide(

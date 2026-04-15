@@ -1,10 +1,10 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../model/medication.dart';
 import '../repository/medication_repository.dart';
 import '../routes/app_router.dart';
+import '../viewmodels/alarm_view_model.dart';
 
 class AlarmPage extends StatefulWidget {
   final Medication medication;
@@ -22,27 +22,22 @@ class AlarmPage extends StatefulWidget {
 
 class _AlarmPageState extends State<AlarmPage>
     with SingleTickerProviderStateMixin {
-  final _repository = MedicationRepository();
+  late AlarmViewModel _viewModel;
 
-  // Animação do ícone pulsando
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
-  // Contador regressivo do "lembrar em 5 min"
-  Timer? _snoozeTimer;
-  int _snoozeSecondsLeft = 0;
-  bool _isSnoozed = false;
-  bool _isDone = false;
-
   static const _primaryPurple = Color(0xFF7C5CBF);
-  static const _lightPurple = Color(0xFFEAE4F7);
-  static const _darkPurple = Color(0xFF2D1B5E);
 
   @override
   void initState() {
     super.initState();
+    _viewModel = AlarmViewModel(
+      MedicationRepository(),
+      medication: widget.medication,
+      schedule: widget.schedule,
+    );
 
-    // Vibração ao abrir a tela (simula o alarme)
     HapticFeedback.heavyImpact();
 
     _pulseController = AnimationController(
@@ -57,94 +52,45 @@ class _AlarmPageState extends State<AlarmPage>
 
   @override
   void dispose() {
+    _viewModel.dispose();
     _pulseController.dispose();
-    _snoozeTimer?.cancel();
     super.dispose();
   }
 
-  // ── Ações ───────────────────────────────────────────────────────────────
-
   Future<void> _onTaken() async {
     HapticFeedback.mediumImpact();
-    setState(() => _isDone = true);
     _pulseController.stop();
-    _snoozeTimer?.cancel();
-
-    await _repository.updateStatus(widget.schedule.id, MedicationStatus.taken);
-
+    await _viewModel.takeMedication();
     await Future.delayed(const Duration(milliseconds: 1600));
     if (!mounted) return;
     context.go(AppRoutes.home);
   }
 
   void _onSnooze() {
-    if (_isSnoozed) return;
     HapticFeedback.selectionClick();
-    setState(() {
-      _isSnoozed = true;
-      _snoozeSecondsLeft = 5 * 60; // 5 minutos em segundos
-    });
-
-    _snoozeTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      setState(() => _snoozeSecondsLeft--);
-      if (_snoozeSecondsLeft <= 0) {
-        timer.cancel();
-        setState(() => _isSnoozed = false);
-        HapticFeedback.heavyImpact();
-      }
-    });
-  }
-
-  String get _snoozeLabel {
-    if (!_isSnoozed) return 'Lembrar em 5 minutos';
-    final min = _snoozeSecondsLeft ~/ 60;
-    final sec = _snoozeSecondsLeft % 60;
-    return 'Lembrete em ${min.toString().padLeft(2, '0')}:${sec.toString().padLeft(2, '0')}';
-  }
-
-  String get _recurrenceLabel {
-    switch (widget.schedule.recurrenceType) {
-      case RecurrenceType.daily:
-        return 'Todo dia';
-      case RecurrenceType.weekly:
-        final days = widget.schedule.weekDays ?? [];
-        const map = {
-          'mon': 'Seg',
-          'tue': 'Ter',
-          'wed': 'Qua',
-          'thu': 'Qui',
-          'fri': 'Sex',
-          'sat': 'Sáb',
-          'sun': 'Dom',
-        };
-        return days.map((d) => map[d] ?? d).join(', ');
-      case RecurrenceType.interval:
-        return 'A cada ${widget.schedule.intervalHours}h';
-    }
+    _viewModel.snooze();
   }
 
   @override
   Widget build(BuildContext context) {
-    // Bloqueia o botão de voltar do sistema
-    return PopScope(
-      canPop: false,
-      child: Scaffold(
-        backgroundColor: _isDone ? const Color(0xFF4CAF50) : _primaryPurple,
-        body: SafeArea(child: _isDone ? _buildDoneState() : _buildAlarmState()),
+    return ListenableBuilder(
+      listenable: _viewModel,
+      builder: (context, _) => PopScope(
+        canPop: false,
+        child: Scaffold(
+          backgroundColor:
+              _viewModel.isDone ? const Color(0xFF4CAF50) : _primaryPurple,
+          body: SafeArea(
+            child: _viewModel.isDone ? _buildDoneState() : _buildAlarmState(),
+          ),
+        ),
       ),
     );
   }
 
-  // ── Estado: alarme ativo ──────────────────────────────────────────────
-
   Widget _buildAlarmState() {
     return Column(
       children: [
-        // Topo: hora atual
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
           child: Row(
@@ -152,8 +98,6 @@ class _AlarmPageState extends State<AlarmPage>
             children: [_buildTimeBadge(), _buildScheduleBadge()],
           ),
         ),
-
-        // Centro: ícone + info do remédio
         Expanded(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -161,17 +105,11 @@ class _AlarmPageState extends State<AlarmPage>
               _buildPulsingIcon(),
               const SizedBox(height: 32),
               _buildMedInfo(),
-              if (widget.medication.notes != null) ...[
-                const SizedBox(height: 20),
-                _buildNotesCard(),
-              ],
               const SizedBox(height: 32),
               _buildAudioBar(),
             ],
           ),
         ),
-
-        // Botões de ação
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
           child: Column(
@@ -301,7 +239,7 @@ class _AlarmPageState extends State<AlarmPage>
         ),
         const SizedBox(height: 8),
         Text(
-          _recurrenceLabel,
+          _viewModel.recurrenceLabel,
           style: TextStyle(
             color: Colors.white.withOpacity(0.6),
             fontSize: 12,
@@ -309,39 +247,6 @@ class _AlarmPageState extends State<AlarmPage>
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildNotesCard() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 32),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.25), width: 1),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.info_outline_rounded,
-            color: Colors.white70,
-            size: 18,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              widget.medication.notes!,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                height: 1.4,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -356,7 +261,6 @@ class _AlarmPageState extends State<AlarmPage>
       ),
       child: Row(
         children: [
-          // Botão play
           Container(
             width: 40,
             height: 40,
@@ -371,7 +275,6 @@ class _AlarmPageState extends State<AlarmPage>
             ),
           ),
           const SizedBox(width: 12),
-          // Ondas de áudio decorativas
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -387,27 +290,10 @@ class _AlarmPageState extends State<AlarmPage>
                 const SizedBox(height: 6),
                 Row(
                   children: List.generate(20, (i) {
-                    final heights = [
-                      6.0,
-                      10.0,
-                      14.0,
-                      8.0,
-                      16.0,
-                      10.0,
-                      6.0,
-                      12.0,
-                      18.0,
-                      10.0,
-                      8.0,
-                      14.0,
-                      6.0,
-                      10.0,
-                      16.0,
-                      8.0,
-                      12.0,
-                      6.0,
-                      10.0,
-                      8.0,
+                    const heights = [
+                      6.0, 10.0, 14.0, 8.0, 16.0, 10.0, 6.0, 12.0, 18.0,
+                      10.0, 8.0, 14.0, 6.0, 10.0, 16.0, 8.0, 12.0, 6.0,
+                      10.0, 8.0,
                     ];
                     return Container(
                       width: 3,
@@ -462,17 +348,21 @@ class _AlarmPageState extends State<AlarmPage>
     return SizedBox(
       width: double.infinity,
       child: OutlinedButton.icon(
-        onPressed: _isSnoozed ? null : _onSnooze,
+        onPressed: _viewModel.isSnoozed ? null : _onSnooze,
         icon: Icon(
-          _isSnoozed ? Icons.hourglass_top_rounded : Icons.snooze_rounded,
+          _viewModel.isSnoozed
+              ? Icons.hourglass_top_rounded
+              : Icons.snooze_rounded,
           size: 18,
         ),
-        label: Text(_snoozeLabel),
+        label: Text(_viewModel.snoozeLabel),
         style: OutlinedButton.styleFrom(
           foregroundColor: Colors.white,
           disabledForegroundColor: Colors.white54,
           side: BorderSide(
-            color: _isSnoozed ? Colors.white30 : Colors.white.withOpacity(0.5),
+            color: _viewModel.isSnoozed
+                ? Colors.white30
+                : Colors.white.withOpacity(0.5),
             width: 1.5,
           ),
           padding: const EdgeInsets.symmetric(vertical: 15),
@@ -484,8 +374,6 @@ class _AlarmPageState extends State<AlarmPage>
       ),
     );
   }
-
-  // ── Estado: remédio tomado ───────────────────────────────────────────────
 
   Widget _buildDoneState() {
     return Column(

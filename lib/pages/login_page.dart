@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../routes/app_router.dart' show AppRoutes, AppSession;
+import '../viewmodels/login_view_model.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -11,20 +12,26 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  late LoginViewModel _viewModel;
+
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _nameFocus = FocusNode();
   final _phoneFocus = FocusNode();
-  bool _isLoading = false;
-  bool _nameError = false;
 
   static const _primaryPurple = Color(0xFF7C5CBF);
-  static const _lightPurple = Color(0xFFEAE4F7);
   static const _darkPurple = Color(0xFF2D1B5E);
   static const _softBg = Color(0xFFF7F4F0);
 
   @override
+  void initState() {
+    super.initState();
+    _viewModel = LoginViewModel();
+  }
+
+  @override
   void dispose() {
+    _viewModel.dispose();
     _nameController.dispose();
     _phoneController.dispose();
     _nameFocus.dispose();
@@ -34,16 +41,14 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _onEnter() async {
     final name = _nameController.text.trim();
-    if (name.isEmpty) {
-      setState(() => _nameError = true);
+    if (!_viewModel.validate(name)) {
       _nameFocus.requestFocus();
       return;
     }
-    setState(() => _nameError = false);
 
     AppSession.userName = name;
-    setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 800));
+    AppSession.userPhone = _phoneController.text.trim();
+    await _viewModel.login();
 
     if (!mounted) return;
     context.go(AppRoutes.home);
@@ -51,13 +56,16 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _softBg,
-      resizeToAvoidBottomInset: true,
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: SingleChildScrollView(
-          child: Column(children: [_buildHero(), _buildBody()]),
+    return ListenableBuilder(
+      listenable: _viewModel,
+      builder: (context, _) => Scaffold(
+        backgroundColor: _softBg,
+        resizeToAvoidBottomInset: true,
+        body: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: SingleChildScrollView(
+            child: Column(children: [_buildHero(), _buildBody()]),
+          ),
         ),
       ),
     );
@@ -81,7 +89,7 @@ class _LoginPageState extends State<LoginPage> {
                 decoration: BoxDecoration(
                   color: const Color(0xFF5A3E9E),
                   shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFBFA8EE), width: 3),
+                  border: Border.all(color: const Color(0xFFBFA8EE), width: 2),
                 ),
                 child: const Icon(
                   Icons.elderly_woman_rounded,
@@ -153,11 +161,9 @@ class _LoginPageState extends State<LoginPage> {
             icon: Icons.person_rounded,
             nextFocus: _phoneFocus,
             inputType: TextInputType.name,
-            hasError: _nameError,
+            hasError: _viewModel.nameError,
             errorText: 'Por favor, informe seu nome para continuar',
-            onChanged: (_) {
-              if (_nameError) setState(() => _nameError = false);
-            },
+            onChanged: (_) => _viewModel.clearNameError(),
           ),
           const SizedBox(height: 12),
           _buildInputField(
@@ -174,14 +180,9 @@ class _LoginPageState extends State<LoginPage> {
               _PhoneInputFormatter(),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 40),
           _buildEnterButton(),
-          const SizedBox(height: 16),
-          _buildDivider(),
-          const SizedBox(height: 16),
-          _buildFamiliarButton(),
-          const SizedBox(height: 24),
-          _buildFooter(),
+          const SizedBox(height: 23),
         ],
       ),
     );
@@ -227,8 +228,8 @@ class _LoginPageState extends State<LoginPage> {
                   color: hasError
                       ? const Color(0xFFC62828)
                       : isFocused
-                          ? _primaryPurple
-                          : const Color(0xFFEAE4F7),
+                      ? _primaryPurple
+                      : const Color(0xFFEAE4F7),
                   width: 1.5,
                 ),
               ),
@@ -311,7 +312,7 @@ class _LoginPageState extends State<LoginPage> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: _isLoading ? null : _onEnter,
+        onPressed: _viewModel.isLoading ? null : _onEnter,
         style: ElevatedButton.styleFrom(
           backgroundColor: _primaryPurple,
           foregroundColor: Colors.white,
@@ -323,7 +324,7 @@ class _LoginPageState extends State<LoginPage> {
             borderRadius: BorderRadius.circular(18),
           ),
         ),
-        child: _isLoading
+        child: _viewModel.isLoading
             ? const SizedBox(
                 width: 22,
                 height: 22,
@@ -333,84 +334,6 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               )
             : const Text('Entrar no app'),
-      ),
-    );
-  }
-
-  Widget _buildDivider() {
-    return Row(
-      children: [
-        Expanded(child: Divider(color: _lightPurple, thickness: 1.5)),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Text(
-            'ou',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: Colors.purple.shade200,
-            ),
-          ),
-        ),
-        Expanded(child: Divider(color: _lightPurple, thickness: 1.5)),
-      ],
-    );
-  }
-
-  Widget _buildFamiliarButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: () {
-          // TODO: navegar para fluxo do familiar
-        },
-        icon: const Icon(Icons.people_rounded, size: 18),
-        label: const Text('Sou familiar / cuidador'),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: _primaryPurple,
-          side: const BorderSide(color: Color(0xFFEAE4F7), width: 1.5),
-          backgroundColor: Colors.white,
-          elevation: 0,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFooter() {
-    return Center(
-      child: RichText(
-        textAlign: TextAlign.center,
-        text: const TextSpan(
-          style: TextStyle(
-            fontSize: 12,
-            color: Color(0xFFB0A0CC),
-            fontWeight: FontWeight.w600,
-            height: 1.6,
-          ),
-          children: [
-            TextSpan(text: 'Ao entrar, você concorda com nossos\n'),
-            TextSpan(
-              text: 'Termos de uso',
-              style: TextStyle(
-                color: _primaryPurple,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            TextSpan(text: ' e '),
-            TextSpan(
-              text: 'Política de privacidade',
-              style: TextStyle(
-                color: _primaryPurple,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

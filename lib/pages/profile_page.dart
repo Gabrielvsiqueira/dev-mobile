@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../repository/medication_repository.dart';
 import '../routes/app_router.dart';
+import '../viewmodels/profile_view_model.dart';
+import '../widgets/app_bottom_nav.dart';
+import '../widgets/stat_card.dart';
 
 class ProfilePage extends StatefulWidget {
   final String userName;
@@ -13,10 +16,7 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  final _repository = MedicationRepository();
-
-  int _medicationCount = 0;
-  bool _isEditing = false;
+  late ProfileViewModel _viewModel;
 
   late final TextEditingController _nameController;
   late final TextEditingController _phoneController;
@@ -31,13 +31,14 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
+    _viewModel = ProfileViewModel(MedicationRepository());
     _nameController = TextEditingController(text: widget.userName);
-    _phoneController = TextEditingController();
-    _loadCount();
+    _phoneController = TextEditingController(text: AppSession.userPhone);
   }
 
   @override
   void dispose() {
+    _viewModel.dispose();
     _nameController.dispose();
     _phoneController.dispose();
     _nameFocus.dispose();
@@ -45,23 +46,20 @@ class _ProfilePageState extends State<ProfilePage> {
     super.dispose();
   }
 
-  Future<void> _loadCount() async {
-    final meds = await _repository.getMedicationsForToday();
-    if (mounted) setState(() => _medicationCount = meds.length);
-  }
-
-  void _toggleEdit() => setState(() {
-    _isEditing = !_isEditing;
-    if (_isEditing) {
+  void _toggleEdit() {
+    _viewModel.toggleEdit();
+    if (_viewModel.isEditing) {
       Future.delayed(
         const Duration(milliseconds: 100),
         () => _nameFocus.requestFocus(),
       );
     }
-  });
+  }
 
   void _saveEdit() {
-    setState(() => _isEditing = false);
+    AppSession.userName = _nameController.text.trim();
+    AppSession.userPhone = _phoneController.text.trim();
+    _viewModel.saveEdit();
     FocusScope.of(context).unfocus();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -97,10 +95,7 @@ class _ProfilePageState extends State<ProfilePage> {
             onPressed: () => Navigator.of(ctx).pop(),
             child: const Text(
               'Cancelar',
-              style: TextStyle(
-                color: _primaryPurple,
-                fontWeight: FontWeight.w700,
-              ),
+              style: TextStyle(color: _primaryPurple, fontWeight: FontWeight.w700),
             ),
           ),
           ElevatedButton(
@@ -148,18 +143,14 @@ class _ProfilePageState extends State<ProfilePage> {
             onPressed: () => Navigator.of(ctx).pop(),
             child: const Text(
               'Cancelar',
-              style: TextStyle(
-                color: _primaryPurple,
-                fontWeight: FontWeight.w700,
-              ),
+              style: TextStyle(color: _primaryPurple, fontWeight: FontWeight.w700),
             ),
           ),
           ElevatedButton(
             onPressed: () async {
-              await _repository.resetToSeedData();
-              if (!mounted) return;
               Navigator.of(ctx).pop();
-              _loadCount();
+              await _viewModel.resetData();
+              if (!mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: const Text(
@@ -195,33 +186,36 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _softBg,
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-                child: Column(
-                  children: [
-                    _buildAvatarCard(),
-                    const SizedBox(height: 16),
-                    _buildStatsRow(),
-                    const SizedBox(height: 24),
-                    _buildDataCard(),
-                    const SizedBox(height: 16),
-                    _buildActionsCard(),
-                    const SizedBox(height: 16),
-                    _buildDangerCard(),
-                  ],
+    return ListenableBuilder(
+      listenable: _viewModel,
+      builder: (context, _) => Scaffold(
+        backgroundColor: _softBg,
+        body: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: Column(
+            children: [
+              _buildHeader(),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+                  child: Column(
+                    children: [
+                      _buildAvatarCard(),
+                      const SizedBox(height: 16),
+                      _buildStatsRow(),
+                      const SizedBox(height: 24),
+                      _buildDataCard(),
+                      const SizedBox(height: 16),
+                      _buildActionsCard(),
+                      const SizedBox(height: 16),
+                      _buildDangerCard(),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            _buildBottomNav(),
-          ],
+              AppBottomNav(activeTab: AppTab.profile),
+            ],
+          ),
         ),
       ),
     );
@@ -264,7 +258,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ],
               ),
-              if (_isEditing)
+              if (_viewModel.isEditing)
                 GestureDetector(
                   onTap: _saveEdit,
                   child: Container(
@@ -362,9 +356,9 @@ class _ProfilePageState extends State<ProfilePage> {
     return Row(
       children: [
         Expanded(
-          child: _buildStatCard(
+          child: StatCard(
             icon: Icons.medication_rounded,
-            value: '$_medicationCount',
+            value: '${_viewModel.medicationCount}',
             label: 'Remédios\ncadastrados',
             color: _primaryPurple,
             bg: _lightPurple,
@@ -372,68 +366,15 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: _buildStatCard(
+          child: StatCard(
             icon: Icons.notifications_active_rounded,
-            value: '$_medicationCount',
+            value: '${_viewModel.medicationCount}',
             label: 'Lembretes\nhoje',
             color: const Color(0xFF2E7D32),
             bg: const Color(0xFFE8F5E9),
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildStatCard({
-    required IconData icon,
-    required String value,
-    required String label,
-    required Color color,
-    required Color bg,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _lightPurple, width: 1.5),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: bg,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 22),
-          ),
-          const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  color: color,
-                ),
-              ),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 10,
-                  color: Color(0xFF9B8EC4),
-                  fontWeight: FontWeight.w600,
-                  height: 1.3,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 
@@ -461,7 +402,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
                 GestureDetector(
-                  onTap: _isEditing ? _saveEdit : _toggleEdit,
+                  onTap: _viewModel.isEditing ? _saveEdit : _toggleEdit,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -472,7 +413,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      _isEditing ? 'Salvar' : 'Editar',
+                      _viewModel.isEditing ? 'Salvar' : 'Editar',
                       style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
@@ -540,13 +481,12 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
           Expanded(
-            child: _isEditing
+            child: _viewModel.isEditing
                 ? TextField(
                     controller: controller,
                     focusNode: focusNode,
                     keyboardType: inputType,
                     inputFormatters: formatters,
-                    onChanged: (_) => setState(() {}),
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -574,7 +514,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
           ),
-          if (_isEditing)
+          if (_viewModel.isEditing)
             const Icon(Icons.edit_outlined, size: 16, color: Color(0xFFBFA8EE)),
         ],
       ),
@@ -662,7 +602,9 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             Icon(
               Icons.chevron_right_rounded,
-              color: danger ? const Color(0xFFEF9A9A) : const Color(0xFFBFA8EE),
+              color: danger
+                  ? const Color(0xFFEF9A9A)
+                  : const Color(0xFFBFA8EE),
               size: 20,
             ),
           ],
@@ -743,71 +685,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildBottomNav() {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFEAE4F7), width: 1.5)),
-      ),
-      padding: EdgeInsets.only(
-        top: 12,
-        bottom: MediaQuery.of(context).padding.bottom + 12,
-        left: 24,
-        right: 24,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(
-            icon: Icons.home_rounded,
-            label: 'Início',
-            onTap: () => context.go(AppRoutes.home),
-          ),
-          _buildNavItem(
-            icon: Icons.calendar_month_rounded,
-            label: 'Calendário',
-            onTap: () => context.go(AppRoutes.calendar),
-          ),
-          _buildNavItem(
-            icon: Icons.person_rounded,
-            label: 'Perfil',
-            isActive: true,
-            onTap: () {},
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    bool isActive = false,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 24,
-            color: isActive ? _primaryPurple : const Color(0xFFBFA8EE),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: isActive ? _primaryPurple : const Color(0xFFBFA8EE),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _PhoneFormatter extends TextInputFormatter {
