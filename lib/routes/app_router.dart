@@ -25,6 +25,7 @@ class AppRoutes {
 class AppSession {
   AppSession._();
   static String userName = '';
+  static String userPhone = '';
 }
 
 class AlarmArgs {

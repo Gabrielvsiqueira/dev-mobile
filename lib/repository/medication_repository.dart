@@ -84,6 +84,11 @@ class MedicationRepository {
     ),
   ];
 
+  Future<List<Medication>> getAllMedications() async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    return List.from(_medications);
+  }
+
   Future<List<Medication>> getMedicationsForToday() async {
     await Future.delayed(const Duration(milliseconds: 400));
     return List.from(_medications);
