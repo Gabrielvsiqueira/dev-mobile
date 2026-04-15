@@ -1,4 +1,3 @@
-import 'package:alo_nene/pages/login_page.dart';
 import 'package:flutter/material.dart';
 import 'routes/app_router.dart';
 
