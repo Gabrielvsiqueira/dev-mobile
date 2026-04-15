@@ -6,7 +6,6 @@ class Medication {
   final String id;
   final String name;
   final String dosage;
-  final String? notes;
   final String? audioUrl;
   final List<MedicationSchedule> schedules;
 
@@ -14,7 +13,6 @@ class Medication {
     required this.id,
     required this.name,
     required this.dosage,
-    this.notes,
     this.audioUrl,
     required this.schedules,
   });
