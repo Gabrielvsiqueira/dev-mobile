@@ -1,6 +1,6 @@
-# Alo, Nenê!
+# Alô, Nenê!
 
-É um aplicativo mobile desenvolvido  em Flutter desenhado para ajudar pessoas idosas a se lembrarem de tomar seus medicamentos diarios. O aplicativo combina lembretes com audio gravado por familiares, interfaces de usuários acessíveis e suporte a multiplos tipos de recorrencia.
+É um aplicativo mobile desenvolvido em Flutter desenhado para ajudar pessoas idosas a se lembrarem de tomar seus medicamentos diários. O aplicativo combina lembretes com áudio gravado por familiares, interfaces de usuários acessíveis e suporte a múltiplos tipos de recorrência.
 
 ---
 
@@ -24,7 +24,7 @@ O **Alô, Nenê!** combina lembretes de medicação com:
 | Camada | Tecnologia |
 |---|---|
 | Frontend | Flutter (Dart) |
-| Arquitetura | Baseada em Repository Pattern |
+| Arquitetura | MVVM (Model-View-ViewModel) |
 
 ---
 
@@ -32,19 +32,23 @@ O **Alô, Nenê!** combina lembretes de medicação com:
 
 | Pasta | Responsabilidade |
 |---|---|
-| pages | UI e navegação |
-| model | Domínio e entidades |
-| repository | Acesso aos dados |
+| `pages/` | UI e navegação (View) |
+| `viewmodels/` | Estado e lógica de negócio (ViewModel) |
+| `model/` | Domínio e entidades (Model) |
+| `repository/` | Acesso aos dados |
+| `widgets/` | Componentes visuais reutilizáveis |
+| `routes/` | Configuração de navegação |
 
 ### 2.1 Principais decisões
 
-- Uso de **Repository Pattern** para desacoplar dados  
-- Fluxo unidirecional de dados (UDF)  
+- Uso de **MVVM** para separar lógica de negócio da UI  
+- **Repository Pattern** mantido como camada de acesso a dados  
+- Fluxo unidirecional de dados (UDF) via `ChangeNotifier`  
 - Wizard único para criação e edição de medicamentos  
 - Foco em UX acessível para idosos  
 
-- **Arquitetura detalhada** → /docs/architecture.md
-- **Decisões técnicas (ADRs)** → /docs/adr/
+- **Arquitetura detalhada** → /lib/docs/architeture.md
+- **Decisões técnicas (ADRs)** → /lib/docs/adr/
 
 ---
 
@@ -58,12 +62,36 @@ lib/
 │   ├── login_page.dart               ✅ pronto
 │   ├── home_page.dart                ✅ pronto
 │   ├── medication_wizard_page.dart   ✅ pronto
+│   ├── calendar_page.dart            ✅ pronto
+│   ├── profile_page.dart             ✅ pronto
+│   ├── alarm_page.dart               ✅ pronto
+│   └── emergency_page.dart           ✅ pronto
+│
+├── viewmodels/
+│   ├── home_view_model.dart          ✅ pronto
+│   ├── wizard_view_model.dart        ✅ pronto
+│   ├── calendar_view_model.dart      ✅ pronto
+│   ├── profile_view_model.dart       ✅ pronto
+│   ├── alarm_view_model.dart         ✅ pronto
+│   ├── emergency_view_model.dart     ✅ pronto
+│   └── login_view_model.dart         ✅ pronto
 │
 ├── model/
 │   └── medication.dart               ✅ pronto
 │
-└── repository/
-    └── medication_repository.dart    ✅ pronto (mockado → Supabase depois)
+├── repository/
+│   └── medication_repository.dart    ✅ pronto (mockado → Supabase depois)
+│
+├── widgets/
+│   ├── medication_card.dart          ✅ pronto
+│   ├── history_card.dart             ✅ pronto
+│   ├── stat_card.dart                ✅ pronto
+│   ├── contact_card.dart             ✅ pronto
+│   ├── wizard_steps.dart             ✅ pronto
+│   └── app_bottom_nav.dart           ✅ pronto
+│
+└── routes/
+    └── app_router.dart               ✅ pronto
 ```
 
 ---
@@ -73,3 +101,10 @@ lib/
 ```bash
 flutter pub get
 flutter run
+```
+
+## 5. Desenvolvedores
+| Nomes |
+|---|
+| Gabriel Vitor Siqueira |
+| Lucas Gonçalves Padilha |

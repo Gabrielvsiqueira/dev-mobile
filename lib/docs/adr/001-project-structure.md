@@ -1,21 +1,30 @@
 # 001 - Estrutura de Pastas
 
 ## Status
-Aceito
+Atualizado
 
 ## Contexto
-O projeto precisa de uma organização simples, clara e escalável para separar responsabilidades entre interface, domínio e acesso a dados.
+O projeto precisa de uma organização clara e escalável para separar responsabilidades entre interface, lógica de negócio, domínio e acesso a dados.
 
 ## Decisão
-Adotar uma arquitetura em três camadas dentro de `lib/`:
+Adotar a arquitetura **MVVM** dentro de `lib/`, mantendo o **Repository Pattern** como camada de acesso a dados:
 
-- `pages/` → interface (UI)
-- `model/` → entidades de domínio
+- `pages/` → View: interface (UI)
+- `viewmodels/` → ViewModel: estado e lógica de negócio
+- `model/` → Model: entidades de domínio
 - `repository/` → acesso a dados
+- `widgets/` → componentes visuais reutilizáveis
+- `routes/` → configuração de navegação
 
-Inspirado no Repository Pattern e com fluxo unidirecional de dados (UDF).
+O fluxo de dados é unidirecional (UDF): `View → ViewModel → Repository → ViewModel → View`.
+
+## Histórico
+A estrutura inicial continha apenas `pages/`, `model/` e `repository/`, inspirada no Repository Pattern simples. Com o crescimento das telas, a lógica de negócio foi extraída para `viewmodels/` e os componentes visuais repetidos para `widgets/`.
 
 ## Consequências
 ✅ Separação clara de responsabilidades  
-✅ Facilidade de manutenção e evolução  
-❌ Pode gerar duplicação de componentes visuais inicialmente
+✅ Pages limpas — apenas constroem UI  
+✅ ViewModels testáveis independentemente da UI  
+✅ Widgets reutilizáveis entre telas  
+❌ Mais arquivos no projeto  
+❌ Um ViewModel por tela aumenta o número de classes
