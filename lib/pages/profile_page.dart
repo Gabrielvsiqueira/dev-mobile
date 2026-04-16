@@ -314,17 +314,12 @@ class _ProfilePageState extends State<ProfilePage> {
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: const BoxDecoration(
-              color: Color(0xFF5A3E9E),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.elderly_woman_rounded,
-              color: Color(0xFFBFA8EE),
-              size: 40,
+          ClipOval(
+            child: Image.asset(
+              'lib/images/logo_v1_icone_app.png',
+              width: 72,
+              height: 72,
+              fit: BoxFit.cover,
             ),
           ),
           const SizedBox(height: 12),
