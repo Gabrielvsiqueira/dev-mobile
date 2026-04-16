@@ -49,6 +49,6 @@ class HomeViewModel extends ChangeNotifier {
   List<DateTime> get weekDays {
     final now = DateTime.now();
     final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-    return List.generate(5, (i) => startOfWeek.add(Duration(days: i)));
+    return List.generate(7, (i) => startOfWeek.add(Duration(days: i)));
   }
 }
