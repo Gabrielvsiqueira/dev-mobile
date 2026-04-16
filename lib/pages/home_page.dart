@@ -113,17 +113,17 @@ class _HomePageState extends State<HomePage> {
                   width: 52,
                   height: 52,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF5A3E9E),
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: const Color(0xFFBFA8EE),
                       width: 2.5,
                     ),
                   ),
-                  child: const Icon(
-                    Icons.person_rounded,
-                    color: Color(0xFFBFA8EE),
-                    size: 28,
+                  child: ClipOval(
+                    child: Image.asset(
+                      'lib/images/logo_v1_icone_app.png',
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ),
@@ -148,7 +148,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildDateStrip() {
     final days = _viewModel.weekDays;
-    const dayNames = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'];
+    const dayNames = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,7 +174,10 @@ class _HomePageState extends State<HomePage> {
             itemCount: days.length,
             itemBuilder: (context, i) {
               final day = days[i];
-              final isSelected = _viewModel.isSameDay(day, _viewModel.selectedDate);
+              final isSelected = _viewModel.isSameDay(
+                day,
+                _viewModel.selectedDate,
+              );
               return GestureDetector(
                 onTap: () => _viewModel.selectDate(day),
                 child: AnimatedContainer(
@@ -185,7 +188,9 @@ class _HomePageState extends State<HomePage> {
                     color: isSelected ? _primaryPurple : Colors.white,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: isSelected ? _primaryPurple : const Color(0xFFEAE4F7),
+                      color: isSelected
+                          ? _primaryPurple
+                          : const Color(0xFFEAE4F7),
                       width: 1.5,
                     ),
                   ),
@@ -213,8 +218,8 @@ class _HomePageState extends State<HomePage> {
                       ),
                       const SizedBox(height: 4),
                       Container(
-                        width: 5,
-                        height: 5,
+                        width: 7,
+                        height: 7,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: isSelected
@@ -271,8 +276,11 @@ class _HomePageState extends State<HomePage> {
                   color: _lightPurple,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.medication_rounded,
-                    color: _primaryPurple, size: 22),
+                child: const Icon(
+                  Icons.medication_rounded,
+                  color: _primaryPurple,
+                  size: 22,
+                ),
               ),
               title: Text(
                 med.name,
@@ -283,10 +291,7 @@ class _HomePageState extends State<HomePage> {
               ),
               subtitle: Text(
                 med.dosage,
-                style: const TextStyle(
-                  color: Color(0xFF8A7AAA),
-                  fontSize: 12,
-                ),
+                style: const TextStyle(color: Color(0xFF8A7AAA), fontSize: 12),
               ),
               onTap: () => ctx.pop(med),
             ),
@@ -415,10 +420,11 @@ class _HomePageState extends State<HomePage> {
           elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 16),
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
         ),
       ),
     );
   }
-
 }

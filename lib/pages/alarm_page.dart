@@ -78,8 +78,9 @@ class _AlarmPageState extends State<AlarmPage>
       builder: (context, _) => PopScope(
         canPop: false,
         child: Scaffold(
-          backgroundColor:
-              _viewModel.isDone ? const Color(0xFF4CAF50) : _primaryPurple,
+          backgroundColor: _viewModel.isDone
+              ? const Color(0xFF4CAF50)
+              : _primaryPurple,
           body: SafeArea(
             child: _viewModel.isDone ? _buildDoneState() : _buildAlarmState(),
           ),
@@ -291,9 +292,26 @@ class _AlarmPageState extends State<AlarmPage>
                 Row(
                   children: List.generate(20, (i) {
                     const heights = [
-                      6.0, 10.0, 14.0, 8.0, 16.0, 10.0, 6.0, 12.0, 18.0,
-                      10.0, 8.0, 14.0, 6.0, 10.0, 16.0, 8.0, 12.0, 6.0,
-                      10.0, 8.0,
+                      6.0,
+                      10.0,
+                      14.0,
+                      8.0,
+                      16.0,
+                      10.0,
+                      6.0,
+                      12.0,
+                      18.0,
+                      10.0,
+                      8.0,
+                      14.0,
+                      6.0,
+                      10.0,
+                      16.0,
+                      8.0,
+                      12.0,
+                      6.0,
+                      10.0,
+                      8.0,
                     ];
                     return Container(
                       width: 3,
@@ -376,9 +394,10 @@ class _AlarmPageState extends State<AlarmPage>
   }
 
   Widget _buildDoneState() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
         TweenAnimationBuilder<double>(
           tween: Tween(begin: 0.0, end: 1.0),
           duration: const Duration(milliseconds: 500),
@@ -426,7 +445,8 @@ class _AlarmPageState extends State<AlarmPage>
             fontWeight: FontWeight.w600,
           ),
         ),
-      ],
+        ],
+      ),
     );
   }
 }

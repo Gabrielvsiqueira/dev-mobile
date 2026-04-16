@@ -72,14 +72,6 @@ class MedicationRepository {
           intervalHours: 12,
           status: MedicationStatus.taken,
         ),
-        MedicationSchedule(
-          id: 's5b',
-          medicationId: '5',
-          scheduledTime: '19:00',
-          recurrenceType: RecurrenceType.interval,
-          intervalHours: 12,
-          status: MedicationStatus.upcoming,
-        ),
       ],
     ),
   ];
