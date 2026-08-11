@@ -172,10 +172,3 @@ O arquivo `medication.dart` concentra todas as definições de domínio: as clas
 - Upload e reprodução de áudio via Supabase Storage
 
 ---
-
-## Desenvolvedores
-
-| Nome |
-|---|
-| Gabriel Vitor Siqueira |
-| Lucas Gonçalves Padilha |
